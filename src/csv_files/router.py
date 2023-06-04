@@ -32,7 +32,7 @@ async def review_csv(table_name: str, limit: int = 50, offset: int = 0, filter: 
 
 
 @router_files.get('/review')
-@cache(expire=10)
+@cache(expire=600)
 async def review_csv(csv_files_service: CsvFilesService = Depends()):
     data = await csv_files_service.review_csv()
     return {

@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+
+  db:
+    image: postgres:15
+    container_name: db_csv
+    command: -p 5555
+    expose:
+      - 5555
+    env_file:
+      - .env-non-dev
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+
+  redis:
+    image: redis:7
+    container_name: redis_csv
+    command: --port 5354
+    expose:
+      - 5354
+
+  app:
+    build: .
+    container_name: app_csv
+    volumes:
+      - .:/shop
+    command: ['/fastapi_app/docker/csv.sh']
+    ports:
+      - '5341:8000'
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env-non-dev
