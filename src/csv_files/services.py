@@ -1,16 +1,13 @@
 import csv
-from typing import BinaryIO
+import re
 
-from celery import Celery
+from typing import BinaryIO
 
 from fastapi import Depends
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from database import get_async_session
-import re
-
-celery = Celery('tasks', broker='redis://localhost:6379')
 
 
 class CsvFilesService:
@@ -28,54 +25,54 @@ class CsvFilesService:
         first_row = next(reader, None)
         row_types = []
         if first_row:
-            stmt2 = f'INSERT INTO {tablename} VALUES ('
+            stmt_insert = f'INSERT INTO {tablename} VALUES ('
 
             for value in first_row.values():
                 if value.isdigit():
                     row_types.append('INTEGER')
-                    stmt2 += f'{value}, '
+                    stmt_insert += f'{value}, '
                     continue
                 try:
                     float(value)
                     row_types.append('REAL')
-                    stmt2 += f'{value}, '
+                    stmt_insert += f'{value}, '
                     continue
                 except Exception:
                     pass
                 row_types.append('VARCHAR(255)')
                 if value:
-                    stmt2 += f"'{value}', "
+                    stmt_insert += f"'{value}', "
                 else:
-                    stmt2 += 'Null, '
+                    stmt_insert += 'Null, '
             for i in range(len(row_types)):
                 if re.search('(Id)|(ID)|(id)|(iD)', headers[i]):
                     row_types[i] = 'bigint'
                     continue
 
-            stmt = f'CREATE TABLE {tablename} ('
+            stmt_create = f'CREATE TABLE {tablename} ('
             for i in range(len(row_types)):
-                stmt += f'{headers[i]} {row_types[i]}, '
-            stmt = stmt[:-2]
-            stmt += ');'
-            stmt2 = stmt2[:-2]
-            stmt2 += ');'
-            await self.session.execute(text(stmt))
-            await self.session.execute(text(stmt2))
+                stmt_create += f'{headers[i]} {row_types[i]}, '
+            stmt_create = stmt_create[:-2]
+            stmt_create += ');'
+            stmt_insert = stmt_insert[:-2]
+            stmt_insert += ');'
+            await self.session.execute(text(stmt_create))
+            await self.session.execute(text(stmt_insert))
 
         for row in reader:
-            stmt2 = f'INSERT INTO {tablename} VALUES ('
+            stmt_insert = f'INSERT INTO {tablename} VALUES ('
             for i, value in enumerate(row.values()):
                 if value:
                     if row_types[i] == 'VARCHAR(255)':
-                        stmt2 += f"'{value}', "
+                        stmt_insert += f"'{value}', "
                     else:
-                        stmt2 += f'{value}, '
+                        stmt_insert += f'{value}, '
                 else:
-                    stmt2 += 'Null, '
-            stmt2 = stmt2[:-2]
-            stmt2 += ');'
+                    stmt_insert += 'Null, '
+            stmt_insert = stmt_insert[:-2]
+            stmt_insert += ');'
 
-            await self.session.execute(text(stmt2))
+            await self.session.execute(text(stmt_insert))
 
         await self.session.commit()
 
@@ -84,14 +81,16 @@ class CsvFilesService:
         """ Метод возвращает список файлов
             с информацией о колонках """
 
-        query_tables = "SELECT table_name FROM information_schema.tables WHERE table_schema='public'"
+        query_tables = "SELECT table_name FROM information_schema.tables WHERE table_schema='public' " \
+                       "and table_name != 'alembic_version' and table_name != 'user'"
         result = await self.session.execute(text(query_tables))
         tables = [item[0] for item in result.all()]
 
         data = []
 
         for table_name in tables:
-            query_columns = f"SELECT column_name from information_schema.columns WHERE table_name = '{table_name}';"
+            query_columns = f"SELECT column_name from information_schema.columns WHERE table_name = '{table_name}'" \
+                            "and table_name != 'alembic_version' and table_name != 'user';"
             result = await self.session.execute(text(query_columns))
             columns = [item[0] for item in result.all()]
 
@@ -99,7 +98,7 @@ class CsvFilesService:
 
         return data
 
-    async def get_csv(self, table_name, limit, offset, filter, order_by):
+    async def get_csv(self, table_name: str, limit: int, offset: int, filter: str, order_by: str):
 
         """ Метод возвращает данные из конкретного файла
             с опциональными фильтрацией и сортировкой """
@@ -120,18 +119,10 @@ class CsvFilesService:
             data.append(list(item))
         return {table_name: data[offset:][:limit]}
 
-    async def drop_csv(self, tablename):
+    async def drop_csv(self, tablename: str):
 
         """ Метод удаляет csv файл """
 
         stmt = f"DROP TABLE {tablename}"
         await self.session.execute(text(stmt))
         await self.session.commit()
-
-
-c = CsvFilesService()
-
-
-@celery.task
-def task_csv_import(name, file):
-    return c.import_csv(name, file)

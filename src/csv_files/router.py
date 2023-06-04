@@ -2,8 +2,9 @@ from typing import Optional
 
 from fastapi import APIRouter, UploadFile, File, Depends
 from fastapi_cache.decorator import cache
+from starlette.background import BackgroundTasks
+
 from csv_files.services import CsvFilesService
-from tasks import CustomTask
 
 router_files = APIRouter(
     prefix='/files',
@@ -12,11 +13,9 @@ router_files = APIRouter(
 
 
 @router_files.post('/upload')
-async def upload_csv(name: str, file: UploadFile = File(...), csv_files_service: CsvFilesService = Depends()):
-    # custom_task = CustomTask(name, file.file)
-    # custom_task.delay()
-    # csvFilesService_wrapper.delay(name, file.file)
-    # await csv_files_service.import_csv(name, file.file)
+def upload_csv(name: str, bg_task: BackgroundTasks, file: UploadFile = File(...),
+               csv_files_service: CsvFilesService = Depends()):
+    bg_task.add_task(csv_files_service.import_csv, name, file.file)
     return {"status": "success"}
 
 
@@ -33,7 +32,7 @@ async def review_csv(table_name: str, limit: int = 50, offset: int = 0, filter: 
 
 
 @router_files.get('/review')
-@cache(expire=600)
+@cache(expire=10)
 async def review_csv(csv_files_service: CsvFilesService = Depends()):
     data = await csv_files_service.review_csv()
     return {
@@ -44,6 +43,6 @@ async def review_csv(csv_files_service: CsvFilesService = Depends()):
 
 
 @router_files.delete('/{table_name}')
-async def delete_gamemode(table_name: str, csv_files_service: CsvFilesService = Depends()):
+async def delete_csv(table_name: str, csv_files_service: CsvFilesService = Depends()):
     await csv_files_service.drop_csv(table_name)
     return {"status": "success"}
