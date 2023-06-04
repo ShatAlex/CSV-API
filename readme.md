@@ -7,5 +7,20 @@
 
     **Запрос/Ответ**
     | Запрос  | Ответ |
-    | ----------------- | ----------------- |
-    | curl -X 'GET' \ 'http://127.0.0.1:8000/files/review' \ -H 'accept: application/json' | Response code: 200    Response body:    {"status": "success",    "data": [    {    "test3": [    "id",    "value",    "logid",    "date"    ]    },    ],    "details": null    }|
+    | ------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------|                                                               | ----------------- |
+    | curl -X 'GET' \ 'http://127.0.0.1:8000/files/review' \ Response code: 200
+    |-H 'accept: application/json'                          |Response body:
+    |                                                       |{
+    |                                                       |  "status": "success",
+    |                                                       |   "data": [
+    |                                                       |     {    
+    |                                                       |       "test3": [
+    |                                                       |         "id",
+    |                                                       |         "value",
+    |                                                       |         "logid",
+    |                                                       |         "date"
+    |                                                       |        ]
+    |                                                       |      },
+    |                                                       |    ],
+    |                                                       |    "details": null
+    |                                                       |}
