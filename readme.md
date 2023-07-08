@@ -1,9 +1,13 @@
 # HTTP Servies for working with CSV files
 
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/beautifulsoup4)
-![PyPI](https://img.shields.io/pypi/v/beautifulsoup4?label=beautifulsoup4&color=purple)
-![PyPI](https://img.shields.io/pypi/v/aiohttp?label=aiohttp&color=yellow)
-![PyPI](https://img.shields.io/pypi/v/asyncio?label=asyncio&color=green)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/fastapi)
+![PyPI](https://img.shields.io/pypi/v/FastAPI?label=fastapi&color=orange)
+![PyPI](https://img.shields.io/pypi/v/sqlalchemy?label=sqlalchemy&color=yellow)
+![PyPI](https://img.shields.io/pypi/v/redis?label=redis&color=brown)
+![PyPI](https://img.shields.io/pypi/v/alembic?label=alembic&color=purple)
+![PyPI](https://img.shields.io/pypi/v/asyncpg?label=asyncpg&color=green)
+![PyPI](https://img.shields.io/pypi/v/pydantic?label=pydantic&color=black)
+![PyPI](https://img.shields.io/pypi/v/flower?label=flower&color=pink)
 
 ___
 
@@ -12,7 +16,7 @@ HTTP service designed to work with imported data in csv format of various format
 
 ___
 
-### Functionality provided by the API
+### :clipboard: Functionality provided by the API
 + Getting a list of files with information about columns
 + Getting data for a specific file with optional filtering and sorting by columns
 + Implemented user authorization
@@ -81,7 +85,7 @@ ___
 
 ___
 
-### About the project
+### :information_source: About the project
 
 The service is written in FastAPI with a PostgreSQL database, Redis was used for caching requests.
 User authorization is written on the basis of the FastAPI Users library (Cookie, JWT), in the future it is planned to rewrite it to OAuth2.
